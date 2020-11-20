@@ -20,11 +20,18 @@ func (s *Set) Add(o interface{}) bool {
 
     s.rwm.RLock()
     if s.setMap[o] {
+        s.rwm.RUnlock()
         return false
     }
     s.rwm.RUnlock()
 
     s.rwm.Lock()
+    if s.setMap[o] {
+        // It was added on another thread before
+        // we got the lock. we can just return.
+        s.rwm.Unlock()
+        return false
+    }
     s.setMap[o] = true
     s.rwm.Unlock()
 
@@ -38,11 +45,16 @@ func (s *Set) Remove(o interface{}) bool {
 
     s.rwm.RLock()
     if !s.setMap[o] {
+        s.rwm.RUnlock()
         return false
     }
     s.rwm.RUnlock()
 
     s.rwm.Lock()
+    if !s.setMap[o] {
+        s.rwm.Unlock()
+        return false
+    }
     delete(s.setMap, o)
     s.rwm.Unlock()
 
