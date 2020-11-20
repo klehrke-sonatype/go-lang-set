@@ -1,2 +1,2 @@
 # go-lang-set
-A set impl for golang
+A thread safe set impl for golang
